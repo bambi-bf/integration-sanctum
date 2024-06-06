@@ -1,0 +1,47 @@
+{
+  "name": "sanctum-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.29.0",
+    "@metaplex-foundation/js": "^0.20.1",
+    "@metaplex-foundation/mpl-token-metadata": "^3.2.1",
+    "@nfteyez/sol-rayz": "^0.10.2",
+    "@solana/spl-token": "^0.3.8",
+    "@solana/wallet-adapter-base": "^0.9.22",
+    "@solana/wallet-adapter-react": "^0.15.32",
+    "@solana/wallet-adapter-react-ui": "^0.9.31",
+    "@solana/wallet-adapter-wallets": "^0.19.18",
+    "@solana/web3.js": "^1.78.0",
+    "@tanstack/react-query": "^5.40.0",
+    "axios": "^1.6.7",
+    "luxon": "^3.4.4",
+    "moment": "^2.30.1",
+    "next": "14.0.3",
+    "pino-pretty": "^11.0.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-minimal-pie-chart": "^8.4.0",
+    "react-query": "^3.39.3",
+    "react-toastify": "^10.0.4",
+    "react-use": "^17.5.0"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.3",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5"
+  }
+}
