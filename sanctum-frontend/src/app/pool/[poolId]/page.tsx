@@ -9,7 +9,7 @@ import { TokenDataProps } from "@/utils/type";
 import { getTokenInfo } from "@/utils/util";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import React, { FC, useEffect, useMemo, useState } from "react";
 
 export default function PoolPage() {
@@ -19,6 +19,8 @@ export default function PoolPage() {
   const tokens: Array<string> = JSON.parse(
     Buffer.from(tokenStrings, "base64").toString("utf-8")
   );
+  const searchParam = useSearchParams();
+  const search = searchParam.get("activeTab") || "yours";
 
   const { publicKey } = useWallet();
 
@@ -171,6 +173,15 @@ export default function PoolPage() {
             </div>
           </div>
           <TabsTip />
+          <div className={`${search == "yours" || search == null ?  "block" : "hidden"}`}>
+              yours
+          </div>
+          <div className={`${search == "add"?  "block" : "hidden"}`}>
+              <h2 className="text-[20px] font-bold">Enter deposit amount:</h2>
+          </div>
+          <div className={`${search == "swap"?  "block" : "hidden"}`}>
+              swap
+          </div>
         </div>
       </div>
     </div>
