@@ -1,24 +1,28 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getMint, getAccount } from '@solana/spl-token';
+import { getMint, getAccount } from "@solana/spl-token";
 import { SOLANA_RPC } from "@/config";
+import { findMetadataPda } from "@metaplex-foundation/js";
 
 export const solConnection = new Connection(SOLANA_RPC);
+const TOKEN_LIST_URL = 'https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json';
 
-export const getTokenInfo = async (tokenPubkey: PublicKey) => {
+export const getTokenIconUrl = async (mintAddress: string): Promise<string | undefined> => {
     try {
-        // Fetch token mint information
-        const mintInfo = await getMint(solConnection, tokenPubkey);
-        console.log('Mint Info:', mintInfo);
+        const response = await fetch(TOKEN_LIST_URL);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch token list: ${response.statusText}`);
+        }
 
-        // Fetch token accounts by token mint
-        const tokenAccounts = await solConnection.getParsedTokenAccountsByOwner(
-            tokenPubkey,
-            { mint: tokenPubkey }
-        );
-        console.log(tokenAccounts);
+        const tokenList = await response.json();
+        const tokenInfo = tokenList.tokens.find((token: any) => token.address === mintAddress);
 
+        if (tokenInfo) {
+            return tokenInfo.logoURI;
+        } else {
+            throw new Error(`Token with mint address ${mintAddress} not found in token list.`);
+        }
     } catch (error) {
-        console.error('Error fetching token info:', error);
+        console.error('Error fetching token icon URL:', error);
+        return undefined;
     }
 };
-

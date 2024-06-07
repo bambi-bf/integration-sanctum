@@ -11,7 +11,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SolanaWalletProvider>
       <QueryClientProvider client={queryClient}>
-        <main className={`lg:min-h-screen backdrop-blur-lg bg-gray-800`}>
+        <main className={`lg:min-h-screen backdrop-blur-lg`}>
           <div className="flex">
             <div className="w-full lg:w-[calc(100%-80px)]">
               <Header />
