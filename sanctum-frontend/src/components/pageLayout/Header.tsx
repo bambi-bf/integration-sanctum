@@ -16,7 +16,6 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
   const { publicKey, disconnect, connected } = useWallet();
   const router = useRouter();
   useEffect(() => {
-    console.log(publicKey)
     if (publicKey) {
       if (WHITE_LIST.some((item) => item.pubKey == publicKey.toString())) {
         console.log("success");
@@ -26,6 +25,7 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
         disconnect();
       }
     }
+    else router.push("/error");
   }, [disconnect, publicKey, router]);
   return (
     <header className="hidden lg:block font-sans relative z-[999]">

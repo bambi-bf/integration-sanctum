@@ -24,12 +24,16 @@ export default function PoolPage() {
 
   const { publicKey } = useWallet();
 
-  const [tokenInfos, setTokenInfos] = useState<Record<string, TokenDataProps | null>>({});
+  const [tokenInfos, setTokenInfos] = useState<
+    Record<string, TokenDataProps | null>
+  >({});
 
   useEffect(() => {
     const fetchTokenIcons = async () => {
       try {
-        const newTokenInfos: Record<string, TokenDataProps | null> = { ...tokenInfos };
+        const newTokenInfos: Record<string, TokenDataProps | null> = {
+          ...tokenInfos,
+        };
         for (const token of tokens) {
           if (token) {
             const tokenInfo = await getTokenInfo(
@@ -96,7 +100,9 @@ export default function PoolPage() {
                   className="rounded-full"
                   alt=""
                 />
-                <span className="text-[20px] mx-2">{token + " "}</span>
+                <span className="text-[20px] mx-2">
+                  {tokenInfos[token as TokenKey]?.symbol + " "}
+                </span>
                 <span className="pb-[7px]">
                   {tokenAddress[token as TokenKey] &&
                     tokenAddress[token as TokenKey].slice(0, 4)}
@@ -149,7 +155,9 @@ export default function PoolPage() {
                     alt=""
                   />
                   <BalanceBox token={token as TokenKey} />
-                  <span className="text-[20px] mx-2">{token + " "}</span>
+                  <span className="text-[20px] mx-2">
+                    {tokenInfos[token as TokenKey]?.symbol + " "}
+                  </span>
                 </div>
               ))}
             </div>
@@ -165,23 +173,41 @@ export default function PoolPage() {
                       className="rounded-full"
                       alt=""
                     />
-
-                    <span className="text-[20px] mx-2">{token + " "}</span>
+                    <span className="text-[20px] mx-2">
+                      {tokenInfos[token as TokenKey]?.symbol + " "}
+                    </span>
                   </div>
                 );
               })}
             </div>
           </div>
           <TabsTip />
-          <div className={`${search == "yours" || search == null ?  "block" : "hidden"}`}>
-              yours
+          <div
+            className={`${
+              search == "yours" || search == null ? "block" : "hidden"
+            }`}
+          >
+            yours
           </div>
-          <div className={`${search == "add"?  "block" : "hidden"}`}>
-              <h2 className="text-[20px] font-bold">Enter deposit amount:</h2>
+          <div className={`${search == "add" ? "block" : "hidden"}`}>
+            <h2 className="text-[20px] font-bold">Enter deposit amount:</h2>
+            <div className="flex w-full gap-5">
+              {tokens.map((token, index) => (
+                <div className={`flex border border-gray-300 w-1/${tokens.length} p-2`} key={index}>
+                  <img
+                    src={tokenInfos[token as TokenKey]?.logoURI}
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                    alt=""
+                  />
+                  <span className="text-[20px] mx-3">{tokenInfos[token as TokenKey]?.symbol}</span>
+                  <input type="text" className="border-none focus:outline-none w-full text-right" placeholder="0.00" inputMode="decimal" />
+                </div>
+              ))}
+            </div>
           </div>
-          <div className={`${search == "swap"?  "block" : "hidden"}`}>
-              swap
-          </div>
+          <div className={`${search == "swap" ? "block" : "hidden"}`}>swap</div>
         </div>
       </div>
     </div>
