@@ -1,12 +1,15 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getMint, getAccount } from "@solana/spl-token";
 import { SOLANA_RPC } from "@/config";
-import { findMetadataPda } from "@metaplex-foundation/js";
+import { programs } from '@metaplex/js';
+import { TokenDataProps } from "./type";
+
+// Destructure the metadata program
+const { metadata: { Metadata } } = programs;
 
 export const solConnection = new Connection(SOLANA_RPC);
 const TOKEN_LIST_URL = 'https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json';
 
-export const getTokenIconUrl = async (mintAddress: string): Promise<string | undefined> => {
+export const getTokenInfo = async (mintAddress: string): Promise<TokenDataProps | null> => {
     try {
         const response = await fetch(TOKEN_LIST_URL);
         if (!response.ok) {
@@ -15,14 +18,29 @@ export const getTokenIconUrl = async (mintAddress: string): Promise<string | und
 
         const tokenList = await response.json();
         const tokenInfo = tokenList.tokens.find((token: any) => token.address === mintAddress);
-
+        console.log(tokenInfo)
         if (tokenInfo) {
-            return tokenInfo.logoURI;
+            return tokenInfo;
         } else {
             throw new Error(`Token with mint address ${mintAddress} not found in token list.`);
         }
     } catch (error) {
         console.error('Error fetching token icon URL:', error);
-        return undefined;
+        return null;
+    }
+};
+
+export const getTokenMetadataInfo = async (mintAddress: PublicKey) => {
+    try {
+        // Derive the metadata account address from the token mint address
+        const metadataPDA = await Metadata.getPDA(mintAddress);
+
+        // Fetch the metadata account
+        const metadataAccount = await Metadata.load(solConnection, metadataPDA);
+
+        // Log the metadata
+        console.log('Token Metadata:', metadataAccount.data);
+    } catch (error) {
+        console.error('Error fetching token metadata:', error);
     }
 };

@@ -20,7 +20,7 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
     if (publicKey) {
       if (WHITE_LIST.some((item) => item.pubKey == publicKey.toString())) {
         console.log("success");
-        router.push("/");
+        router.push("/dashboard");
       } else {
         router.push("/error");
         disconnect();

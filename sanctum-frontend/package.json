@@ -12,6 +12,7 @@
     "@coral-xyz/anchor": "0.29.0",
     "@metaplex-foundation/js": "^0.20.1",
     "@metaplex-foundation/mpl-token-metadata": "^3.2.1",
+    "@metaplex/js": "^4.12.0",
     "@nfteyez/sol-rayz": "^0.10.2",
     "@solana/spl-token": "^0.3.8",
     "@solana/wallet-adapter-base": "^0.9.22",
