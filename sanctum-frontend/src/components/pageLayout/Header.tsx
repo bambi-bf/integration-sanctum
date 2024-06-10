@@ -6,7 +6,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import useSolBalance from "@/hooks/useSolBalance";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
-import { WHITE_LIST } from "@/constants";
 
 interface HeaderProps {
   title?: string;
@@ -15,9 +14,13 @@ interface HeaderProps {
 const Header: FC<HeaderProps> = ({ title = "" }) => {
   const { publicKey, disconnect, connected } = useWallet();
   const router = useRouter();
+  
   useEffect(() => {
+    const whiteListString = process.env.NEXT_PUBLIC_WHITE_LIST;
+    const whiteList = whiteListString ? JSON.parse(whiteListString) : [];
+    console.log(whiteList)
     if (publicKey) {
-      if (WHITE_LIST.some((item) => item.pubKey == publicKey.toString())) {
+      if (whiteList.some((item: any) => item.pubKey == publicKey.toString())) {
         console.log("success");
         router.push("/dashboard");
       } else {
@@ -36,7 +39,7 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
           Sanctun
         </div>
         <div className="flex items-center gap-3">
-          <BalanceBox />
+          {publicKey && <BalanceBox />}
           <ConnectButton />
         </div>
       </div>
