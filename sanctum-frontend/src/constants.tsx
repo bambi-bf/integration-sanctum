@@ -19,3 +19,16 @@ export const TabMenu = [
     { title: 'Add Position', link: '?activeTab=add', param: 'add' },
     { title: 'Swap', link: '?activeTab=swap', param: 'swap' },
 ]
+
+export const FeeLabels = [
+    { title: "Normal", value: "1" },
+    { title: "High", value: "2" },
+    { title: "Turbo", value: "5" }
+]
+
+export const Slippage = [
+    { value: "0.1" },
+    { value: "0.5" },
+    { value: "1.0" },
+    { value: "1.5" }
+]

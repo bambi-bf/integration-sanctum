@@ -18,7 +18,6 @@ export const getTokenInfo = async (mintAddress: string): Promise<TokenDataProps 
 
         const tokenList = await response.json();
         const tokenInfo = tokenList.tokens.find((token: any) => token.address === mintAddress);
-        console.log(tokenInfo)
         if (tokenInfo) {
             return tokenInfo;
         } else {

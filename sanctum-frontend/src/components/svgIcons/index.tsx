@@ -21,3 +21,4 @@ export * from "./SendIcon";
 export * from "./CloseIcon";
 export * from "./MenuCloseIcon";
 export * from "./MenuOpenIcon";
+export * from "./SwitchIcon"

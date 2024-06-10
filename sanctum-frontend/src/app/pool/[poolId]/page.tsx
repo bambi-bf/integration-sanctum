@@ -3,6 +3,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import TabsTip from "@/components/TabsTip";
+import FeeSetting from "@/components/modal/feeSetting";
+import SwitchIcon from "@/components/svgIcons/SwitchIcon";
+import Tab from "@/components/tab";
 import { TokenKey, tokenAddress } from "@/constants";
 import useTokenBalance from "@/hooks/useTokenBalance";
 import { TokenDataProps } from "@/utils/type";
@@ -10,7 +13,9 @@ import { getTokenInfo } from "@/utils/util";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { usePathname, useSearchParams } from "next/navigation";
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
+import RangeSlider from "react-range-slider-input";
+import "react-range-slider-input/dist/style.css";
 
 export default function PoolPage() {
   const pathname = usePathname();
@@ -27,6 +32,8 @@ export default function PoolPage() {
   const [tokenInfos, setTokenInfos] = useState<
     Record<string, TokenDataProps | null>
   >({});
+  const [slideValue, setSlideValue] = useState([10, 70]);
+  const [swapOrder, setSwapOrder] = useState(0);
 
   useEffect(() => {
     const fetchTokenIcons = async () => {
@@ -84,7 +91,7 @@ export default function PoolPage() {
       </div>
       <div className="flex bg-white p-5 gap-20">
         <div className="flex flex-col w-3/5">
-          <div className="flex-col border-b py-5">
+          <div className="flex-col py-5">
             <span>Total Value Locked</span>
             <h2 className="text-[25px] font-bold">$12,816,919.85</h2>
             <span>0.00024453% permanently locked</span>
@@ -189,27 +196,222 @@ export default function PoolPage() {
           >
             yours
           </div>
-          <div className={`${search == "add" ? "block" : "hidden"}`}>
+          <div className={`${search == "add" ? "block" : "hidden"} mt-5`}>
             <h2 className="text-[20px] font-bold">Enter deposit amount:</h2>
-            <div className="flex w-full gap-5">
+            <div className="flex w-full gap-5 border-b pb-3">
               {tokens.map((token, index) => (
-                <div className={`flex border border-gray-300 w-1/${tokens.length} p-2`} key={index}>
-                  <img
-                    src={tokenInfos[token as TokenKey]?.logoURI}
-                    width={30}
-                    height={30}
-                    className="rounded-full"
-                    alt=""
-                  />
-                  <span className="text-[20px] mx-3">{tokenInfos[token as TokenKey]?.symbol}</span>
-                  <input type="text" className="border-none focus:outline-none w-full text-right" placeholder="0.00" inputMode="decimal" />
+                <div
+                  className={`flex flex-col w-1/${tokens.length} pb-3gir `}
+                  key={index}
+                >
+                  <div
+                    className={`flex border rounded-md border-gray-300 w-full p-2`}
+                  >
+                    <img
+                      src={tokenInfos[token as TokenKey]?.logoURI}
+                      width={30}
+                      height={30}
+                      className="rounded-full"
+                      alt=""
+                    />
+                    <span className="text-[20px] mx-3">
+                      {tokenInfos[token as TokenKey]?.symbol}
+                    </span>
+                    <input
+                      type="text"
+                      className="border-none focus:outline-none w-full text-right"
+                      placeholder="0.00"
+                      inputMode="decimal"
+                    />
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <div>
+                      <span>
+                        Balance:
+                        <BalanceBox token={token as TokenKey} />
+                      </span>
+                    </div>
+                    <div className="text-[12px] mt-2">
+                      <span className="bg-gray-300 rounded-md p-1 mr-2">
+                        HALF
+                      </span>
+                      <span className="bg-gray-300 rounded-md p-1">MAX</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
+            <Tab labels={["Spot", "Curve", "Bid Ask"]}>
+              <div>
+                <b>Spot</b> provides a uniform distribution that is versatile
+                and risk adjusted, suitable for any type of market and
+                conditions. This is similar to setting a CLMM price range.
+              </div>
+              <div>
+                <b>Curve</b> is ideal for a concentrated approach that aims to
+                maximise capital efficiency. This is great for stables or pairs
+                where the price does not change very often.
+              </div>
+              <div>
+                <b>Bid-Ask</b> is an inverse Curve distribution, typically
+                deployed single sided for a DCA in or out strategy. It can be
+                used to capture volatility especially when prices vastly move
+                out of the typical range.
+              </div>
+            </Tab>
+            <div className="flex flex-col gap-3">
+              <RangeSlider value={slideValue} onInput={setSlideValue} />
+              <div className="flex mt-5 gap-3 justify-between">
+                <div className="w-1/2">
+                  <span>Min Price</span>
+                  <input
+                    className="border focus: outline-none focus:border text-right h-10 pr-2"
+                    type="text"
+                    value={slideValue[0]}
+                    onChange={(e) =>
+                      setSlideValue([Number(e.target.value), slideValue[1]])
+                    }
+                  />
+                </div>
+                <div className="w-1/2">
+                  <span>Max Price</span>
+
+                  <input
+                    className="border focus:outline-none focus:border text-right h-10 pr-2"
+                    type="text"
+                    value={slideValue[1]}
+                    onChange={(e) =>
+                      setSlideValue([slideValue[0], Number(e.target.value)])
+                    }
+                  />
+                </div>
+              </div>
+              <button className="w-full bg-black text-white hover:bg-gray-800 h-10 rounded-md">
+                Add Liquidity
+              </button>
+            </div>
           </div>
-          <div className={`${search == "swap" ? "block" : "hidden"}`}>swap</div>
+          <div className={`${search == "swap" ? "block" : "hidden"}`}>
+            <div className="flex w-full flex-col gap-5 pb-3 mt-5">
+              {swapOrder == 0
+                ? tokens.map((token, index) => (
+                    <div className={`flex flex-col pb-3gir `} key={index}>
+                      <div
+                        className={`flex border rounded-md border-gray-300 w-full p-2`}
+                      >
+                        <img
+                          src={tokenInfos[token as TokenKey]?.logoURI}
+                          width={30}
+                          height={30}
+                          className="rounded-full"
+                          alt=""
+                        />
+                        <span className="text-[20px] mx-3">
+                          {tokenInfos[token as TokenKey]?.symbol}
+                        </span>
+                        <input
+                          type="text"
+                          className="border-none focus:outline-none w-full text-right"
+                          placeholder="0.00"
+                          disabled={index != 0 ? true : false}
+                          inputMode="decimal"
+                        />
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <div>
+                          <span>
+                            Balance:
+                            <BalanceBox token={token as TokenKey} />
+                          </span>
+                        </div>
+                        <div className="text-[12px] mt-2">
+                          {!index && (
+                            <div>
+                              <span className="bg-gray-300 rounded-md p-1 mr-2">
+                                HALF
+                              </span>
+                              <span className="bg-gray-300 rounded-md p-1">
+                                MAX
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {index == 0 && (
+                        <div className="relative w-full mt-10 mb-5">
+                            <span className="h-4">
+                                <hr className="w-full"/>
+                            </span>
+                          <button className="bg-black hover:bg-gray-800 text-white rounded-full p-1 absolute bottom-[-14px] right-[50%]" onClick={() => setSwapOrder(1-swapOrder)}>
+                            <SwitchIcon />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                : tokens.reverse().map((token, index) => (
+                    <div className={`flex flex-col pb-3gir `} key={index}>
+                      <div
+                        className={`flex border rounded-md border-gray-300 w-full p-2`}
+                      >
+                        <img
+                          src={tokenInfos[token as TokenKey]?.logoURI}
+                          width={30}
+                          height={30}
+                          className="rounded-full"
+                          alt=""
+                        />
+                        <span className="text-[20px] mx-3">
+                          {tokenInfos[token as TokenKey]?.symbol}
+                        </span>
+                        <input
+                          type="text"
+                          className="border-none focus:outline-none w-full text-right"
+                          placeholder="0.00"
+                          disabled={index != 0 ? true : false}
+                          inputMode="decimal"
+                        />
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <div>
+                          <span>
+                            Balance:
+                            <BalanceBox token={token as TokenKey} />
+                          </span>
+                        </div>
+                        <div className="text-[12px] mt-2">
+                          {!index && (
+                            <div>
+                              <span className="bg-gray-300 rounded-md p-1 mr-2">
+                                HALF
+                              </span>
+                              <span className="bg-gray-300 rounded-md p-1">
+                                MAX
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {index == 0 && (
+                        <div className="relative w-full mt-10 mb-5">
+                            <span className="h-4">
+                                <hr className="w-full"/>
+                            </span>
+                          <button className="bg-black hover:bg-gray-800 text-white rounded-full p-1 absolute bottom-[-14px] right-[50%]" onClick={() => setSwapOrder(1-swapOrder)}>
+                            <SwitchIcon />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                <div>
+                    <button className="bg-black hover:bg-gray-800 text-white py-3 w-full rounded-lg">Swap</button>
+                </div>
+            </div>
+          </div>
         </div>
       </div>
+      <FeeSetting />
     </div>
   );
 }

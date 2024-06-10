@@ -1,9 +1,12 @@
 "use client";
 import { TabMenu } from "@/constants";
+import { ModalContext } from "@/contexts/ModalContext";
 /* eslint-disable @next/next/no-img-element */
 import { useRouter, useSearchParams } from "next/navigation";
+import { useContext } from "react";
 
 export default function TabsTip() {
+  const { openFeeSettingModal } = useContext(ModalContext);
   const router = useRouter();
   const param = useSearchParams();
   const search = param.get("activeTab") || "items";
@@ -24,7 +27,7 @@ export default function TabsTip() {
           </div>
         ))}
       </div>
-      <button className="border px-3 mb-1 float-right rounded-full">1%</button>
+      <button className="border px-3 mb-1 float-right rounded-full" onClick={() => openFeeSettingModal()}>1%</button>
     </div>
   );
 }
