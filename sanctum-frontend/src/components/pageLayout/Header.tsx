@@ -25,7 +25,8 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
         disconnect();
       }
     }
-    else router.push("/error");
+    else {
+      router.push("/error");}
   }, [disconnect, publicKey, router]);
   return (
     <header className="hidden lg:block font-sans relative z-[999]">
