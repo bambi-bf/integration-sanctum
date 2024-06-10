@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import Modal from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import React, { useContext, useState } from "react";
