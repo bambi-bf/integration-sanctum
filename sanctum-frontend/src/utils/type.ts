@@ -6,3 +6,7 @@ export interface TokenDataProps {
   name: string;
   symbol: string;
 }
+
+export interface TokenBalanceProps {
+    value: number;
+}

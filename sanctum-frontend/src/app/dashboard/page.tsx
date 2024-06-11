@@ -4,18 +4,21 @@
 import { tokenAddress } from "@/constants";
 import { TokenDataProps } from "@/utils/type";
 import { getTokenInfo,getTokenMetadataInfo } from "@/utils/util";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function Dashboard() {
-    const [wsolInfo,setWsolInfo] = useState<TokenDataProps | null>(null);
-    const [usdcInfo,setUsdcInfo] = useState<TokenDataProps | null>(null);
+    const [infInfo,setInfInfo] = useState<TokenDataProps | null>(null);
+    const [bsolInfo,setBsolInfo] = useState<TokenDataProps | null>(null);
 
-    const wsolAddress = tokenAddress.wsol;
-    const usdcAddress = tokenAddress.usdc;
-    const usdcTokenPubkey = new PublicKey(wsolAddress);
-    const wsolTokenPubkey = new PublicKey(usdcAddress);
+    const infAddress = tokenAddress.wsol;
+    const bsolAddress = tokenAddress.bsol;
+    const infTokenPubkey = new PublicKey(infAddress);
+    const bsolTokenPubkey = new PublicKey(bsolAddress);
+
+    const { publicKey } = useWallet();
     
     const router = useRouter();
 
@@ -26,14 +29,16 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
+        if(!publicKey) router.push("/error");
         const fetchTokenInfo = async () => {
-            const tokenWsolInfo = await getTokenInfo(wsolTokenPubkey.toString());
-            setWsolInfo(tokenWsolInfo);
-            const tokenUsdcInfo = await getTokenInfo(usdcTokenPubkey.toString());
-            setUsdcInfo(tokenUsdcInfo);
+            const tokeninfInfo = await getTokenInfo(infTokenPubkey.toString());
+            setInfInfo(tokeninfInfo);
+            const tokenbsolInfo = await getTokenInfo(bsolTokenPubkey.toString());
+            setBsolInfo(tokenbsolInfo);
         }
 
         fetchTokenInfo();
+        
     },[])
 
   return (
@@ -50,11 +55,11 @@ export default function Dashboard() {
           </tr>
         </thead>
         <tbody>
-            <tr className="border-b-[1px] hover:cursor-pointer" onClick={() => poolData(['wsol','usdc'])}>
+            <tr className="border-b-[1px] hover:cursor-pointer" onClick={() => poolData(['wsol','bsol'])}>
                 <td className="flex text-center justify-center align-middle m-auto" align="center">
-                    <img src={wsolInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2"/>
-                    <img src={usdcInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2" />
-                    <span className="align-middle m-auto ml-2 mr-2">WSOL-USDC</span>
+                    <img src={infInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2"/>
+                    <img src={bsolInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2" />
+                    <span className="align-middle m-auto ml-2 mr-2">WSOL-BSOL</span>
                 </td>
                 <td align="center">$12.75m</td>
                 <td align="center">$18,575,854.21</td>
@@ -62,11 +67,11 @@ export default function Dashboard() {
                 <td align="center">N/A</td>
                 <td align="center">N/A</td>
             </tr>
-            <tr className="border-b-[1px]" onClick={() => poolData(['wsol','usdc'])}>
+            <tr className="border-b-[1px]" onClick={() => poolData(['wsol','bsol'])}>
                 <td className="flex text-center justify-center align-middle m-auto" align="center">
-                    <img src={wsolInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2"/>
-                    <img src={usdcInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2" />
-                    <span className="align-middle m-auto ml-2 mr-2">WSOL-USDC</span>
+                    <img src={infInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2"/>
+                    <img src={bsolInfo?.logoURI} alt="" width={40} height={40} className="rounded-full mr-2" />
+                    <span className="align-middle m-auto ml-2 mr-2">WSOL-BSOL</span>
                 </td>
                 <td align="center">$12.75m</td>
                 <td align="center">$18,575,854.21</td>

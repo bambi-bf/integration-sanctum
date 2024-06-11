@@ -25,16 +25,14 @@ const useTokenBalance = (walletPublicKey: PublicKey | null, mintAddress: string 
         });
 
         let wSolBalance = 0;
-
         tokenAccounts.value.forEach((tokenAccountInfo) => {
             const accountData = AccountLayout.decode(tokenAccountInfo.account.data);
+            console.log("accountData",accountData)
             const tokenMint = new PublicKey(accountData.mint);
-
             if (tokenMint.toBase58() === mintAddress) {
                 wSolBalance += Number(accountData.amount);
             }
         });
-
         setBalance(wSolBalance);
     } catch (error) {
         console.error('Error getting wSOL balance:', error);

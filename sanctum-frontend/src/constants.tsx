@@ -1,8 +1,9 @@
-export type TokenKey = "wsol" | "usdc";
+export type TokenKey = "wsol" | "bsol";
 
 export const tokenAddress: Record<TokenKey, string> = {
   wsol: "So11111111111111111111111111111111111111112",
-  usdc: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  bsol: "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
+//   usdc: "2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8"
 };
 
 export const TabMenu = [

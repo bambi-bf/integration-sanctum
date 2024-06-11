@@ -8,10 +8,11 @@ import SwitchIcon from "@/components/svgIcons/SwitchIcon";
 import Tab from "@/components/tab";
 import { TokenKey, tokenAddress } from "@/constants";
 import useTokenBalance from "@/hooks/useTokenBalance";
-import { TokenDataProps } from "@/utils/type";
-import { getTokenInfo } from "@/utils/util";
+import { getQuote, swapLstMint } from "@/utils/sanctum";
+import { TokenBalanceProps, TokenDataProps } from "@/utils/type";
+import { getTokenBalances, getTokenInfo, solConnection } from "@/utils/util";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { usePathname, useSearchParams } from "next/navigation";
 import React, { FC, useEffect, useState } from "react";
 import RangeSlider from "react-range-slider-input";
@@ -20,43 +21,101 @@ import "react-range-slider-input/dist/style.css";
 export default function PoolPage() {
   const pathname = usePathname();
   const tokenStrings = pathname.split("/pool/")[1];
+  const wallet = useWallet();
 
   const tokens: Array<string> = JSON.parse(
     Buffer.from(tokenStrings, "base64").toString("utf-8")
   );
   const searchParam = useSearchParams();
-  const search = searchParam.get("activeTab") || "yours";
+  const search = searchParam.get("activeTab") || "swap";
 
-  const { publicKey } = useWallet();
+  const publicKey = wallet.publicKey;
 
   const [tokenInfos, setTokenInfos] = useState<
     Record<string, TokenDataProps | null>
   >({});
+  const [tokenBalances, setTokenBalances] = useState<
+    Record<string, number | null>
+  >({});
   const [slideValue, setSlideValue] = useState([10, 70]);
   const [swapOrder, setSwapOrder] = useState(0);
+  const [srcLstVal, setSrcLstVal] = useState(0);
+  const [newAccount, setNewAccount] = useState("");
 
   useEffect(() => {
-    const fetchTokenIcons = async () => {
+    const accountChangeListenerId = solConnection.onAccountChange(
+      publicKey as PublicKey,
+      (accountInfo, context) => {
+        setNewAccount(accountInfo.lamports.toString());
+      }
+    );
+
+    return () => {
+      solConnection.removeAccountChangeListener(accountChangeListenerId);
+    };
+  }, [publicKey]);
+
+  const swapLst = async () => {
+    let decimal = tokenInfos[tokens[0] as TokenKey]?.decimals;
+    if (decimal == undefined) {
+      decimal = 9;
+    }
+    const quoteAmount = await getQuote(
+      tokenAddress[tokens[0] as TokenKey],
+      tokenAddress[tokens[1] as TokenKey],
+      srcLstVal * Math.pow(10, decimal)
+    );
+    if (publicKey) {
+      await swapLstMint(
+        wallet,
+        tokenAddress[tokens[0] as TokenKey],
+        tokenAddress[tokens[1] as TokenKey],
+        publicKey?.toBase58(),
+        quoteAmount,
+        srcLstVal * Math.pow(10, decimal)
+      );
+    }
+  };
+
+  useEffect(() => {
+    const fetchTokenInfos = async () => {
       try {
         const newTokenInfos: Record<string, TokenDataProps | null> = {
           ...tokenInfos,
         };
+        const newTokenBalances: Record<string, number | null> = {
+          ...tokenBalances,
+        };
+
         for (const token of tokens) {
           if (token) {
             const tokenInfo = await getTokenInfo(
               tokenAddress[token as TokenKey]
             );
             newTokenInfos[token] = tokenInfo;
+            if (token == "wsol") {
+              const tokenBalance = await solConnection.getBalance(
+                publicKey as PublicKey
+              );
+              newTokenBalances[token] = tokenBalance;
+            } else {
+              const tokenBalance = await getTokenBalances(
+                publicKey as PublicKey,
+                tokenAddress[token as TokenKey]
+              );
+              newTokenBalances[token] = tokenBalance;
+            }
           }
         }
 
         setTokenInfos(newTokenInfos);
+        setTokenBalances(newTokenBalances);
       } catch (error) {
         console.error("Error fetching token icons:", error);
       }
     };
-    fetchTokenIcons();
-  }, []);
+    fetchTokenInfos();
+  }, [solConnection.onAccountChange,newAccount]);
 
   return (
     <div className="container m-auto">
@@ -161,7 +220,10 @@ export default function PoolPage() {
                     className="rounded-full"
                     alt=""
                   />
-                  <BalanceBox token={token as TokenKey} />
+                  <BalanceBox
+                    value={tokenBalances[token as TokenKey]}
+                    decimal={tokenInfos[token as TokenKey]?.decimals}
+                  />
                   <span className="text-[20px] mx-2">
                     {tokenInfos[token as TokenKey]?.symbol + " "}
                   </span>
@@ -228,7 +290,10 @@ export default function PoolPage() {
                     <div>
                       <span>
                         Balance:
-                        <BalanceBox token={token as TokenKey} />
+                        <BalanceBox
+                          value={tokenBalances[token as TokenKey]}
+                          decimal={tokenInfos[token as TokenKey]?.decimals}
+                        />
                       </span>
                     </div>
                     <div className="text-[12px] mt-2">
@@ -310,18 +375,25 @@ export default function PoolPage() {
                           {tokenInfos[token as TokenKey]?.symbol}
                         </span>
                         <input
-                          type="text"
+                          type="number"
                           className="border-none focus:outline-none w-full text-right"
                           placeholder="0.00"
+                          id={index == 0 ? "srcLst" : ""}
                           disabled={index != 0 ? true : false}
                           inputMode="decimal"
+                          step={0.01}
+                          onChange={(e) => setSrcLstVal(Number(e.target.value))}
+                          value={index == 0 ? srcLstVal : 0}
                         />
                       </div>
                       <div className="flex justify-between mt-2">
                         <div>
                           <span>
                             Balance:
-                            <BalanceBox token={token as TokenKey} />
+                            <BalanceBox
+                              value={tokenBalances[token as TokenKey]}
+                              decimal={tokenInfos[token as TokenKey]?.decimals}
+                            />
                           </span>
                         </div>
                         <div className="text-[12px] mt-2">
@@ -339,10 +411,13 @@ export default function PoolPage() {
                       </div>
                       {index == 0 && (
                         <div className="relative w-full mt-10 mb-5">
-                            <span className="h-4">
-                                <hr className="w-full"/>
-                            </span>
-                          <button className="bg-black hover:bg-gray-800 text-white rounded-full p-1 absolute bottom-[-14px] right-[50%]" onClick={() => setSwapOrder(1-swapOrder)}>
+                          <span className="h-4">
+                            <hr className="w-full" />
+                          </span>
+                          <button
+                            className="bg-black hover:bg-gray-800 text-white rounded-full p-1 absolute bottom-[-14px] right-[50%]"
+                            onClick={() => setSwapOrder(1 - swapOrder)}
+                          >
                             <SwitchIcon />
                           </button>
                         </div>
@@ -365,18 +440,25 @@ export default function PoolPage() {
                           {tokenInfos[token as TokenKey]?.symbol}
                         </span>
                         <input
-                          type="text"
+                          type="number"
+                          step={0.01}
                           className="border-none focus:outline-none w-full text-right"
                           placeholder="0.00"
+                          id={index == 0 ? "srcLst" : ""}
                           disabled={index != 0 ? true : false}
                           inputMode="decimal"
+                          onChange={(e) => setSrcLstVal(Number(e.target.value))}
+                          value={index == 0 ? srcLstVal : 0}
                         />
                       </div>
                       <div className="flex justify-between mt-2">
                         <div>
                           <span>
                             Balance:
-                            <BalanceBox token={token as TokenKey} />
+                            <BalanceBox
+                              value={tokenBalances[token as TokenKey]}
+                              decimal={tokenInfos[token as TokenKey]?.decimals}
+                            />
                           </span>
                         </div>
                         <div className="text-[12px] mt-2">
@@ -394,19 +476,27 @@ export default function PoolPage() {
                       </div>
                       {index == 0 && (
                         <div className="relative w-full mt-10 mb-5">
-                            <span className="h-4">
-                                <hr className="w-full"/>
-                            </span>
-                          <button className="bg-black hover:bg-gray-800 text-white rounded-full p-1 absolute bottom-[-14px] right-[50%]" onClick={() => setSwapOrder(1-swapOrder)}>
+                          <span className="h-4">
+                            <hr className="w-full" />
+                          </span>
+                          <button
+                            className="bg-black hover:bg-gray-800 text-white rounded-full p-1 absolute bottom-[-14px] right-[50%]"
+                            onClick={() => setSwapOrder(1 - swapOrder)}
+                          >
                             <SwitchIcon />
                           </button>
                         </div>
                       )}
                     </div>
                   ))}
-                <div>
-                    <button className="bg-black hover:bg-gray-800 text-white py-3 w-full rounded-lg">Swap</button>
-                </div>
+              <div>
+                <button
+                  className="bg-black hover:bg-gray-800 text-white py-3 w-full rounded-lg"
+                  onClick={swapLst}
+                >
+                  Swap
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -417,20 +507,18 @@ export default function PoolPage() {
 }
 
 type TokenProps = {
-  token: TokenKey;
+  value: number | null;
+  decimal: number | undefined;
 };
 
 const BalanceBox: FC<TokenProps> = (tokenProps) => {
-  const { publicKey } = useWallet();
-  const { balance } = useTokenBalance(
-    publicKey,
-    tokenAddress[tokenProps.token]
-  );
-  if (balance)
+  if (tokenProps.value)
     return (
       <div className="flex items-center gap-3">
-        <span className=" text-sm font-bold leading-[1]">
-          {balance ? (balance / LAMPORTS_PER_SOL).toFixed(2) : 0}
+        <span className="text-[20px] mx-3">
+          {tokenProps.value && tokenProps.decimal
+            ? (tokenProps.value / Math.pow(10, tokenProps.decimal)).toFixed(2)
+            : 0}
         </span>
       </div>
     );

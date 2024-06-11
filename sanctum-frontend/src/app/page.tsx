@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
+  router.push("/dashboard");
   // useEffect(() => {
   //   router.push("/dashboard");
   // },[router])

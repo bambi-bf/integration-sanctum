@@ -9,7 +9,7 @@ export default function TabsTip() {
   const { openFeeSettingModal } = useContext(ModalContext);
   const router = useRouter();
   const param = useSearchParams();
-  const search = param.get("activeTab") || "items";
+  const search = param.get("activeTab") || "swap";
   return (
     <div className="w-full border-b-[1px] border-customborder flex items-center justify-between pt-3">
       <div className="flex justify-start gap-5">

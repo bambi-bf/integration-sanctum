@@ -18,7 +18,6 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
   useEffect(() => {
     const whiteListString = process.env.NEXT_PUBLIC_WHITE_LIST;
     const whiteList = whiteListString ? JSON.parse(whiteListString) : [];
-    console.log(whiteList)
     if (publicKey) {
       if (whiteList.some((item: any) => item.pubKey == publicKey.toString())) {
         console.log("success");
