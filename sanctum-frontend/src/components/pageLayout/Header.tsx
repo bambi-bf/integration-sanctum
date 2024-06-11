@@ -33,9 +33,9 @@ const Header: FC<HeaderProps> = ({ title = "" }) => {
   return (
     <header className="hidden lg:block font-sans relative z-[999]">
       <div className="py-2 px-3 md:px-4 flex items-center justify-between">
-        <div className="flex items-center gap-3 pl-10 hover:cursor-pointer" onClick={() => router.push("/")}>
+        <div className="flex items-center gap-3 pl-10 text-[24px] hover:cursor-pointer" onClick={() => router.push("/")}>
           <SolanaIcon />
-          Sanctun
+          Sanctum
         </div>
         <div className="flex items-center gap-3">
           {publicKey && <BalanceBox />}
