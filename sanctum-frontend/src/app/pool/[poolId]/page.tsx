@@ -12,6 +12,8 @@ import {
   addLiquidity,
   getAddLiquidityQuote,
   getQuote,
+  getRemoveLiquidityQuote,
+  removeLiquidity,
   swapLstMint,
 } from "@/utils/sanctum";
 import { TokenBalanceProps, TokenDataProps } from "@/utils/type";
@@ -60,7 +62,7 @@ export default function PoolPage() {
       const accountChangeListenerId = solConnection.onAccountChange(
         publicKey as PublicKey,
         (accountInfo, context) => {
-          setNewAccount(newAccount + "");
+          setNewAccount(newAccount + "1");
         }
       );
       return () => {
@@ -120,6 +122,33 @@ export default function PoolPage() {
     });
   };
 
+  const removeLiquidityIx = async () => {
+    let decimal = tokenInfos[tokens[0] as TokenKey]?.decimals;
+    if (decimal == undefined) {
+      decimal = 9;
+    }
+    const eleWithdraw = document.getElementById(
+      "input-withdraw"
+    ) as HTMLInputElement;
+    if (eleWithdraw.value) {
+      const quoteAmount = await getRemoveLiquidityQuote(
+        tokenAddress["bsol"],
+        Number(eleWithdraw.value) * Math.pow(10, decimal)
+      );
+      console.log(quoteAmount);
+      await setTimeout(() => {}, 1000);
+      if (publicKey) {
+        await removeLiquidity(
+          wallet,
+          tokenAddress["bsol"],
+          publicKey?.toBase58(),
+          quoteAmount,
+          Number(eleWithdraw.value) * Math.pow(10, decimal)
+        );
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchTokenInfos = async () => {
       try {
@@ -150,9 +179,7 @@ export default function PoolPage() {
             }
           }
         }
-        const tokenInfo = await getTokenInfo(
-          tokenAddress["inf"]
-        );
+        const tokenInfo = await getTokenInfo(tokenAddress["inf"]);
         setInfTokenInfo(tokenInfo);
 
         const tokenBalance = await getTokenBalances(
@@ -160,7 +187,7 @@ export default function PoolPage() {
           tokenAddress["inf"]
         );
         newTokenBalances["inf"] = tokenBalance;
-        console.log(newTokenBalances)
+        console.log(newTokenBalances);
 
         setTokenInfos(newTokenInfos);
         setTokenBalances(newTokenBalances);
@@ -310,21 +337,49 @@ export default function PoolPage() {
               search == "yours" || search == null ? "block" : "hidden"
             }`}
           >
-            <div className="flex text-[10px] items-end mt-4">
-              <img
-                src={infTokenInfo?.logoURI}
-                width={30}
-                height={30}
-                className="rounded-full"
-                alt=""
-              />
-              <BalanceBox
-                value={tokenBalances["inf"]}
-                decimal={infTokenInfo?.decimals}
-              />
-              <span className="text-[20px] mx-2">
-                {infTokenInfo?.symbol + " "}
-              </span>
+            <div className="flex flex-col">
+              <div className="flex text-[10px] items-end mt-4">
+                <img
+                  src={infTokenInfo?.logoURI}
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                  alt=""
+                />
+                <BalanceBox
+                  value={tokenBalances["inf"]}
+                  decimal={infTokenInfo?.decimals}
+                />
+                <span className="text-[20px] mx-2">
+                  {infTokenInfo?.symbol + " "}
+                </span>
+              </div>
+              <div
+                className={`flex border rounded-md border-gray-300 w-full p-2 mt-3`}
+              >
+                <img
+                  src={infTokenInfo?.logoURI}
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                  alt=""
+                />
+                <span className="text-[20px] mx-3">{infTokenInfo?.symbol}</span>
+                <input
+                  type="number"
+                  step={0.01}
+                  className="border-none focus:outline-none w-full text-right"
+                  placeholder="0.00"
+                  id="input-withdraw"
+                  inputMode="decimal"
+                />
+              </div>
+              <button
+                className="w-full bg-black text-white hover:bg-gray-800 h-10 rounded-md mt-3"
+                onClick={removeLiquidityIx}
+              >
+                Withdraw
+              </button>
             </div>
           </div>
           <div className={`${search == "add" ? "block" : "hidden"} mt-5`}>
