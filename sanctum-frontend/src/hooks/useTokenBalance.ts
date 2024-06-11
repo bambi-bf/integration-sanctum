@@ -29,7 +29,7 @@ const useTokenBalance = (walletPublicKey: PublicKey | null, mintAddress: string 
             const accountData = AccountLayout.decode(tokenAccountInfo.account.data);
             console.log("accountData",accountData)
             const tokenMint = new PublicKey(accountData.mint);
-            if (tokenMint.toBase58() === mintAddress) {
+            if (tokenMint && tokenMint.toBase58() === mintAddress) {
                 wSolBalance += Number(accountData.amount);
             }
         });

@@ -78,7 +78,7 @@ export const getTokenBalances = async (walletPublicKey: PublicKey, mintAddress: 
         const accountData = AccountLayout.decode(tokenAccountInfo.account.data);
         const tokenMint = new PublicKey(accountData.mint);
         console.log(tokenMint.toBase58())
-        if (tokenMint.toBase58() == mintAddress) {
+        if (tokenMint && tokenMint.toBase58() == mintAddress) {
             tokenBalance += Number(accountData.amount);
         }
     });

@@ -1,8 +1,9 @@
-export type TokenKey = "wsol" | "bsol";
+export type TokenKey = "wsol" | "bsol" | "inf";
 
 export const tokenAddress: Record<TokenKey, string> = {
   wsol: "So11111111111111111111111111111111111111112",
   bsol: "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
+  inf: "5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm"
 //   usdc: "2tWC4JAdL4AxEFJySziYJfsAnW2MHKRo98vbAPiRDSk8"
 };
 

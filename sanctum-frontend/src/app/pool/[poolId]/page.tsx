@@ -8,7 +8,12 @@ import SwitchIcon from "@/components/svgIcons/SwitchIcon";
 import Tab from "@/components/tab";
 import { TokenKey, tokenAddress } from "@/constants";
 import useTokenBalance from "@/hooks/useTokenBalance";
-import { getQuote, swapLstMint } from "@/utils/sanctum";
+import {
+  addLiquidity,
+  getAddLiquidityQuote,
+  getQuote,
+  swapLstMint,
+} from "@/utils/sanctum";
 import { TokenBalanceProps, TokenDataProps } from "@/utils/type";
 import { getTokenBalances, getTokenInfo, solConnection } from "@/utils/util";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -34,6 +39,14 @@ export default function PoolPage() {
   const [tokenInfos, setTokenInfos] = useState<
     Record<string, TokenDataProps | null>
   >({});
+  const [infTokenInfo, setInfTokenInfo] = useState<TokenDataProps | null>({
+    address: "",
+    chainId: 0,
+    decimals: 0,
+    logoURI: "",
+    name: "",
+    symbol: "",
+  });
   const [tokenBalances, setTokenBalances] = useState<
     Record<string, number | null>
   >({});
@@ -43,16 +56,17 @@ export default function PoolPage() {
   const [newAccount, setNewAccount] = useState("");
 
   useEffect(() => {
-    const accountChangeListenerId = solConnection.onAccountChange(
-      publicKey as PublicKey,
-      (accountInfo, context) => {
-        setNewAccount(accountInfo.lamports.toString());
-      }
-    );
-
-    return () => {
-      solConnection.removeAccountChangeListener(accountChangeListenerId);
-    };
+    if (publicKey) {
+      const accountChangeListenerId = solConnection.onAccountChange(
+        publicKey as PublicKey,
+        (accountInfo, context) => {
+          setNewAccount(newAccount + "");
+        }
+      );
+      return () => {
+        solConnection.removeAccountChangeListener(accountChangeListenerId);
+      };
+    }
   }, [publicKey]);
 
   const swapLst = async () => {
@@ -75,6 +89,35 @@ export default function PoolPage() {
         srcLstVal * Math.pow(10, decimal)
       );
     }
+  };
+
+  const addLiquidityIx = async () => {
+    let decimal = tokenInfos[tokens[0] as TokenKey]?.decimals;
+    if (decimal == undefined) {
+      decimal = 9;
+    }
+    tokens.forEach(async (token, index) => {
+      const eleDeposit = document.getElementById(
+        `depo-${token}`
+      ) as HTMLInputElement;
+      if (eleDeposit.value) {
+        const quoteAmount = await getAddLiquidityQuote(
+          tokenAddress[token as TokenKey],
+          Number(eleDeposit.value) * Math.pow(10, decimal)
+        );
+        console.log(quoteAmount);
+        await setTimeout(() => {}, 1000);
+        if (publicKey) {
+          await addLiquidity(
+            wallet,
+            tokenAddress[token as TokenKey],
+            publicKey?.toBase58(),
+            quoteAmount,
+            Number(eleDeposit.value) * Math.pow(10, decimal)
+          );
+        }
+      }
+    });
   };
 
   useEffect(() => {
@@ -107,6 +150,17 @@ export default function PoolPage() {
             }
           }
         }
+        const tokenInfo = await getTokenInfo(
+          tokenAddress["inf"]
+        );
+        setInfTokenInfo(tokenInfo);
+
+        const tokenBalance = await getTokenBalances(
+          publicKey as PublicKey,
+          tokenAddress["inf"]
+        );
+        newTokenBalances["inf"] = tokenBalance;
+        console.log(newTokenBalances)
 
         setTokenInfos(newTokenInfos);
         setTokenBalances(newTokenBalances);
@@ -115,7 +169,7 @@ export default function PoolPage() {
       }
     };
     fetchTokenInfos();
-  }, [solConnection.onAccountChange,newAccount]);
+  }, [newAccount]);
 
   return (
     <div className="container m-auto">
@@ -256,7 +310,22 @@ export default function PoolPage() {
               search == "yours" || search == null ? "block" : "hidden"
             }`}
           >
-            yours
+            <div className="flex text-[10px] items-end mt-4">
+              <img
+                src={infTokenInfo?.logoURI}
+                width={30}
+                height={30}
+                className="rounded-full"
+                alt=""
+              />
+              <BalanceBox
+                value={tokenBalances["inf"]}
+                decimal={infTokenInfo?.decimals}
+              />
+              <span className="text-[20px] mx-2">
+                {infTokenInfo?.symbol + " "}
+              </span>
+            </div>
           </div>
           <div className={`${search == "add" ? "block" : "hidden"} mt-5`}>
             <h2 className="text-[20px] font-bold">Enter deposit amount:</h2>
@@ -280,9 +349,11 @@ export default function PoolPage() {
                       {tokenInfos[token as TokenKey]?.symbol}
                     </span>
                     <input
-                      type="text"
+                      type="number"
+                      step={0.01}
                       className="border-none focus:outline-none w-full text-right"
                       placeholder="0.00"
+                      id={"depo-" + token}
                       inputMode="decimal"
                     />
                   </div>
@@ -351,7 +422,10 @@ export default function PoolPage() {
                   />
                 </div>
               </div>
-              <button className="w-full bg-black text-white hover:bg-gray-800 h-10 rounded-md">
+              <button
+                className="w-full bg-black text-white hover:bg-gray-800 h-10 rounded-md"
+                onClick={addLiquidityIx}
+              >
                 Add Liquidity
               </button>
             </div>

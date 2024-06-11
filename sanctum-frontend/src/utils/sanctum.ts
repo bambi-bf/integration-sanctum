@@ -98,3 +98,82 @@ export const swapLstMint = async (
     console.log(error);
   }
 };
+
+export const getAddLiquidityQuote = async (
+  lstMint: string,
+  amount: number
+): Promise<number | undefined> => {
+  try {
+    const res = await axios.create({ baseURL: SANCTUM_URI }).get("liquidity/add/quote", {
+      params: {
+        lstMint: lstMint,
+        amount: amount.toString(),
+      },
+    });
+    return res.data.lpAmount;
+  } catch (error) {
+    return undefined;
+  }
+};
+
+export const addLiquidity = async (
+  wallet: WalletContextState,
+  lstMint: string,
+  signer: string | undefined,
+  quotedAmount: number | undefined,
+  amount: number
+) => {
+  try {
+    const res = await axios.create({ baseURL: SANCTUM_URI }).post("liquidity/add", {
+      amount: amount.toString(),
+      dstLpAcc: null,
+      lstMint: lstMint,
+      priorityFee: {
+        Auto: {
+          max_unit_price_micro_lamports: 5_000_000,
+          unit_limit: 200_000,
+        },
+      },
+      quotedAmount: quotedAmount,
+      signer: signer,
+      srcLstAcc: null,
+    });
+    const rawTransaction = Buffer.from(res.data.tx, "base64");
+
+    const versionedTransaction =
+      VersionedTransaction.deserialize(rawTransaction);
+
+    try {
+      const { blockhash } = await solConnection.getLatestBlockhash();
+      const transactionV0 = new VersionedTransaction(
+        versionedTransaction.message
+      );
+
+      transactionV0.message.recentBlockhash = blockhash;
+      const sig = await solConnection.simulateTransaction(transactionV0);
+      console.log(sig)
+      if (wallet.signTransaction) {
+        const signedTx = await wallet.signTransaction(transactionV0);
+        // const signature = await solConnection.sendTransaction(transactionV0);
+        const signature = await solConnection.sendRawTransaction(
+          signedTx.serialize(),
+          {
+            skipPreflight: true,
+            maxRetries: 3,
+            preflightCommitment: "confirmed",
+          }
+        );
+        const tx = await solConnection.confirmTransaction(signature);
+        
+        if(tx) {
+            toast.success("Liquidity add is success");   
+        }
+      }
+    } catch (error) {
+        console.log(error)
+      toast.error(error as string);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
