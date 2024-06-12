@@ -42,7 +42,8 @@ export const swapLstMint = async (
   signer: string | undefined,
   quotedAmount: number | undefined,
   amount: number,
-  unitMicroLamports: number
+  unitMicroLamports: number,
+  unitLimit: number
 ) => {
   try {
     const res = await axios.create({ baseURL: SANCTUM_URI }).post("swap", {
@@ -54,7 +55,7 @@ export const swapLstMint = async (
       priorityFee: {
         Auto: {
           max_unit_price_micro_lamports: unitMicroLamports,
-          unit_limit: UNIT_LIMIT,
+          unit_limit: UNIT_LIMIT * unitLimit,
         },
       },
       quotedAmount: quotedAmount,
@@ -89,7 +90,7 @@ export const swapLstMint = async (
           }
         );
         const tx = await solConnection.confirmTransaction(signature);
-
+        console.log(tx)
         if (tx) {
           toast.success("LST swap is success");
         }
@@ -128,7 +129,8 @@ export const addLiquidity = async (
   signer: string | undefined,
   quotedAmount: number | undefined,
   amount: number,
-  unitMicroLamports: number
+  unitMicroLamports: number,
+  unitLimit: number
 ) => {
   try {
     const res = await axios
@@ -140,7 +142,7 @@ export const addLiquidity = async (
         priorityFee: {
           Auto: {
             max_unit_price_micro_lamports: unitMicroLamports,
-            unit_limit: UNIT_LIMIT,
+            unit_limit: UNIT_LIMIT * unitLimit,
           },
         },
         quotedAmount: quotedAmount,
@@ -212,7 +214,8 @@ export const removeLiquidity = async (
   signer: string | undefined,
   quotedAmount: number | undefined,
   amount: number,
-  unitMicroLamports: number
+  unitMicroLamports: number,
+  unitLimit: number
 ) => {
   try {
     const res = await axios
@@ -224,7 +227,7 @@ export const removeLiquidity = async (
         priorityFee: {
           Auto: {
             max_unit_price_micro_lamports: unitMicroLamports,
-            unit_limit: UNIT_LIMIT,
+            unit_limit: UNIT_LIMIT * unitLimit,
           },
         },
         quotedAmount: quotedAmount,

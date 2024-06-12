@@ -58,7 +58,7 @@ export default function PoolPage() {
   const [swapOrder, setSwapOrder] = useState(0);
   const [srcLstVal, setSrcLstVal] = useState(0);
   const [newAccount, setNewAccount] = useState("");
-  const { computeUnitMicroLamports } = useContext(FeeContext);
+  const { computeUnitMicroLamports,computeUnitLimit } = useContext(FeeContext);
 
   useEffect(() => {
     if (publicKey) {
@@ -85,8 +85,8 @@ export default function PoolPage() {
       srcLstVal * Math.pow(10, decimal)
     );
     if (publicKey) {
-      if(computeUnitMicroLamports == 0) {
-        toast.warning("Set computing unit's microlamports");
+      if(computeUnitMicroLamports == 0 || computeUnitLimit == 0) {
+        toast.warning("Set computing unit's price and limit");
         return;
       }
       await swapLstMint(
@@ -96,7 +96,8 @@ export default function PoolPage() {
         publicKey?.toBase58(),
         quoteAmount,
         srcLstVal * Math.pow(10, decimal),
-        computeUnitMicroLamports
+        computeUnitMicroLamports,
+        computeUnitLimit
       );
     }
   };
@@ -118,8 +119,8 @@ export default function PoolPage() {
         console.log(quoteAmount);
         await setTimeout(() => {}, 1000);
         if (publicKey) {
-          if(computeUnitMicroLamports == 0) {
-            toast.warning("Set computing unit's microlamports");
+          if(computeUnitMicroLamports == 0 || computeUnitLimit == 0) {
+            toast.warning("Set computing unit's price and limit");
             return;
           }
           await addLiquidity(
@@ -128,7 +129,8 @@ export default function PoolPage() {
             publicKey?.toBase58(),
             quoteAmount,
             Number(eleDeposit.value) * Math.pow(10, decimal),
-            computeUnitMicroLamports
+            computeUnitMicroLamports,
+            computeUnitLimit
           );
         }
       }
@@ -151,8 +153,8 @@ export default function PoolPage() {
       console.log(quoteAmount);
       await setTimeout(() => {}, 1000);
       if (publicKey) {
-        if(computeUnitMicroLamports == 0) {
-          toast.warning("Set computing unit's microlamports");
+        if(computeUnitMicroLamports == 0 || computeUnitLimit == 0) {
+          toast.warning("Set computing unit's price and limit");
           return;
         }
         await removeLiquidity(
@@ -161,7 +163,8 @@ export default function PoolPage() {
           publicKey?.toBase58(),
           quoteAmount,
           Number(eleWithdraw.value) * Math.pow(10, decimal),
-          computeUnitMicroLamports
+          computeUnitMicroLamports,
+          computeUnitLimit
         );
       }
     }
