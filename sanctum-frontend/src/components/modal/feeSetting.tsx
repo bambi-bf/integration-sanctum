@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import Modal from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ModalContext } from "@/contexts/ModalContext";
 import { CloseIcon } from "../svgIcons";
 import FeeTab from "../tab/feeTab";
@@ -18,10 +18,16 @@ export default function FeeSetting() {
   const handlePriorityFee = (curIndex: number) => {
     setPriorityFee(curIndex);
   };
+  
   const setUnitLamports = () => {
     setComputeUnitMicroLamports(networkFees * Math.pow(10, 9 + 6) / UNIT_LIMIT);
+    localStorage.setItem("fee",networkFees.toString());
     closeFeeSettingModal();
   }
+
+  useEffect(() => {
+    setNetworkFees(Number(localStorage.getItem("fee")));
+  },[])
 
   return (
     <Modal open={feeSettingModalShow} onClose={closeFeeSettingModal} center>
