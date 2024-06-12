@@ -14,19 +14,24 @@ export default function FeeSetting() {
   const [priorityFee, setPriorityFee] = useState(0);
   const [slippage, setSlippage] = useState(0);
   const [networkFees, setNetworkFees] = useState(0);
-  const {computeUnitMicroLamports,setComputeUnitMicroLamports} = useContext(FeeContext);
+  const [unitLimit, setUnitLimit] = useState(0);
+  const {setComputeUnitMicroLamports, setComputeUnitLimit} = useContext(FeeContext);
   const handlePriorityFee = (curIndex: number) => {
     setPriorityFee(curIndex);
+    setUnitLimit(Number(FeeLabels[curIndex].value));
   };
   
   const setUnitLamports = () => {
     setComputeUnitMicroLamports(networkFees * Math.pow(10, 9 + 6) / UNIT_LIMIT);
     localStorage.setItem("fee",networkFees.toString());
+    setComputeUnitLimit(unitLimit);
+    localStorage.setItem("unit-limit",unitLimit.toString());
     closeFeeSettingModal();
   }
 
   useEffect(() => {
     setNetworkFees(Number(localStorage.getItem("fee")));
+    setUnitLimit(Number(localStorage.getItem("unit-limit")));
   },[])
 
   return (
