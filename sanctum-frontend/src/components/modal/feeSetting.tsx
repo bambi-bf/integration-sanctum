@@ -5,16 +5,24 @@ import React, { useContext, useState } from "react";
 import { ModalContext } from "@/contexts/ModalContext";
 import { CloseIcon } from "../svgIcons";
 import FeeTab from "../tab/feeTab";
-import { FeeLabels, Slippage } from "@/constants";
+import { FeeLabels, Slippage, UNIT_LIMIT } from "@/constants";
+import { FeeContext } from "@/contexts/NetworkFeeContext";
 
 export default function FeeSetting() {
   const { feeSettingModalShow, closeFeeSettingModal } =
     useContext(ModalContext);
   const [priorityFee, setPriorityFee] = useState(0);
   const [slippage, setSlippage] = useState(0);
+  const [networkFees, setNetworkFees] = useState(0);
+  const {computeUnitMicroLamports,setComputeUnitMicroLamports} = useContext(FeeContext);
   const handlePriorityFee = (curIndex: number) => {
     setPriorityFee(curIndex);
   };
+  const setUnitLamports = () => {
+    setComputeUnitMicroLamports(networkFees * Math.pow(10, 9 + 6) / UNIT_LIMIT);
+    closeFeeSettingModal();
+  }
+
   return (
     <Modal open={feeSettingModalShow} onClose={closeFeeSettingModal} center>
       <FeeTab labels={["Priority Fee", "Liquidity Slippage", "Swap Slippage"]}>
@@ -51,14 +59,19 @@ export default function FeeSetting() {
             >
               <span className="text-[20px] mx-3">Max</span>
               <input
-                type="text"
+                type="number"
+                step={0.001}
                 className="border-none focus:outline-none w-full text-right"
-                placeholder="0.00"
+                placeholder="0"
                 inputMode="decimal"
+                min={0}
+                max={0.01}
+                onChange={(e) => setNetworkFees(Number(e.target.value))}
+                value={networkFees  }
               />
               <span className="ml-3">SOL</span>
             </div>
-            <button className="w-full bg-black hover:bg-gray-800 text-white my-2 py-3 rounded-md">
+            <button className="w-full bg-black hover:bg-gray-800 text-white my-2 py-3 rounded-md" onClick={setUnitLamports}>
               Save setting
             </button>
           </div>

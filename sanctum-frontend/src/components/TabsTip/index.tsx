@@ -27,7 +27,7 @@ export default function TabsTip() {
           </div>
         ))}
       </div>
-      <button className="border px-3 mb-1 float-right rounded-full" onClick={() => openFeeSettingModal()}>1%</button>
+      <button className="border px-3 mb-1 float-right rounded-full hover:border-black hover:font-bold" onClick={() => openFeeSettingModal()}>Fee Setting</button>
     </div>
   );
 }

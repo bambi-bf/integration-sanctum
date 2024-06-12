@@ -25,3 +25,5 @@ export const Slippage = [
     { value: "1.0" },
     { value: "1.5" }
 ]
+
+export const UNIT_LIMIT = 200_000;

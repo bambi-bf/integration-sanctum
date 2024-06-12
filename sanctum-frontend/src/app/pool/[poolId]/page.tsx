@@ -7,6 +7,7 @@ import FeeSetting from "@/components/modal/feeSetting";
 import SwitchIcon from "@/components/svgIcons/SwitchIcon";
 import Tab from "@/components/tab";
 import { TokenKey, tokenAddress } from "@/constants";
+import { FeeContext } from "@/contexts/NetworkFeeContext";
 import useTokenBalance from "@/hooks/useTokenBalance";
 import {
   addLiquidity,
@@ -21,9 +22,10 @@ import { getTokenBalances, getTokenInfo, solConnection } from "@/utils/util";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { usePathname, useSearchParams } from "next/navigation";
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useContext, useEffect, useState } from "react";
 import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
+import { toast } from "react-toastify";
 
 export default function PoolPage() {
   const pathname = usePathname();
@@ -56,6 +58,7 @@ export default function PoolPage() {
   const [swapOrder, setSwapOrder] = useState(0);
   const [srcLstVal, setSrcLstVal] = useState(0);
   const [newAccount, setNewAccount] = useState("");
+  const { computeUnitMicroLamports } = useContext(FeeContext);
 
   useEffect(() => {
     if (publicKey) {
@@ -82,13 +85,18 @@ export default function PoolPage() {
       srcLstVal * Math.pow(10, decimal)
     );
     if (publicKey) {
+      if(computeUnitMicroLamports == 0) {
+        toast.warning("Set computing unit's microlamports");
+        return;
+      }
       await swapLstMint(
         wallet,
         tokenAddress[tokens[0] as TokenKey],
         tokenAddress[tokens[1] as TokenKey],
         publicKey?.toBase58(),
         quoteAmount,
-        srcLstVal * Math.pow(10, decimal)
+        srcLstVal * Math.pow(10, decimal),
+        computeUnitMicroLamports
       );
     }
   };
@@ -110,12 +118,17 @@ export default function PoolPage() {
         console.log(quoteAmount);
         await setTimeout(() => {}, 1000);
         if (publicKey) {
+          if(computeUnitMicroLamports == 0) {
+            toast.warning("Set computing unit's microlamports");
+            return;
+          }
           await addLiquidity(
             wallet,
             tokenAddress[token as TokenKey],
             publicKey?.toBase58(),
             quoteAmount,
-            Number(eleDeposit.value) * Math.pow(10, decimal)
+            Number(eleDeposit.value) * Math.pow(10, decimal),
+            computeUnitMicroLamports
           );
         }
       }
@@ -138,12 +151,17 @@ export default function PoolPage() {
       console.log(quoteAmount);
       await setTimeout(() => {}, 1000);
       if (publicKey) {
+        if(computeUnitMicroLamports == 0) {
+          toast.warning("Set computing unit's microlamports");
+          return;
+        }
         await removeLiquidity(
           wallet,
           tokenAddress["bsol"],
           publicKey?.toBase58(),
           quoteAmount,
-          Number(eleWithdraw.value) * Math.pow(10, decimal)
+          Number(eleWithdraw.value) * Math.pow(10, decimal),
+          computeUnitMicroLamports
         );
       }
     }
@@ -187,7 +205,6 @@ export default function PoolPage() {
           tokenAddress["inf"]
         );
         newTokenBalances["inf"] = tokenBalance;
-        console.log(newTokenBalances);
 
         setTokenInfos(newTokenInfos);
         setTokenBalances(newTokenBalances);

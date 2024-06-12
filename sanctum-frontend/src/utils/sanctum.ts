@@ -2,6 +2,7 @@ import { SANCTUM_URI } from "@/config";
 import axios from "axios";
 import bs58 from "bs58";
 import {
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -13,6 +14,7 @@ import {
 import { solConnection } from "./util";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { toast } from "react-toastify";
+import { UNIT_LIMIT } from "@/constants";
 
 export const getQuote = async (
   inputMint: string,
@@ -39,7 +41,8 @@ export const swapLstMint = async (
   outputLisMint: string,
   signer: string | undefined,
   quotedAmount: number | undefined,
-  amount: number
+  amount: number,
+  unitMicroLamports: number
 ) => {
   try {
     const res = await axios.create({ baseURL: SANCTUM_URI }).post("swap", {
@@ -50,8 +53,8 @@ export const swapLstMint = async (
       outputLstMint: outputLisMint,
       priorityFee: {
         Auto: {
-          max_unit_price_micro_lamports: 5_000_000,
-          unit_limit: 200_000,
+          max_unit_price_micro_lamports: unitMicroLamports,
+          unit_limit: UNIT_LIMIT,
         },
       },
       quotedAmount: quotedAmount,
@@ -71,8 +74,9 @@ export const swapLstMint = async (
       );
 
       transactionV0.message.recentBlockhash = blockhash;
+
       const sig = await solConnection.simulateTransaction(transactionV0);
-      console.log(sig)
+      console.log(sig);
       if (wallet.signTransaction) {
         const signedTx = await wallet.signTransaction(transactionV0);
         // const signature = await solConnection.sendTransaction(transactionV0);
@@ -85,13 +89,13 @@ export const swapLstMint = async (
           }
         );
         const tx = await solConnection.confirmTransaction(signature);
-        
-        if(tx) {
-            toast.success("LST swap is success");   
+
+        if (tx) {
+          toast.success("LST swap is success");
         }
       }
     } catch (error) {
-        console.log(error)
+      console.log(error);
       toast.error(error as string);
     }
   } catch (error) {
@@ -104,12 +108,14 @@ export const getAddLiquidityQuote = async (
   amount: number
 ): Promise<number | undefined> => {
   try {
-    const res = await axios.create({ baseURL: SANCTUM_URI }).get("liquidity/add/quote", {
-      params: {
-        lstMint: lstMint,
-        amount: amount.toString(),
-      },
-    });
+    const res = await axios
+      .create({ baseURL: SANCTUM_URI })
+      .get("liquidity/add/quote", {
+        params: {
+          lstMint: lstMint,
+          amount: amount.toString(),
+        },
+      });
     return res.data.lpAmount;
   } catch (error) {
     return undefined;
@@ -121,23 +127,26 @@ export const addLiquidity = async (
   lstMint: string,
   signer: string | undefined,
   quotedAmount: number | undefined,
-  amount: number
+  amount: number,
+  unitMicroLamports: number
 ) => {
   try {
-    const res = await axios.create({ baseURL: SANCTUM_URI }).post("liquidity/add", {
-      amount: amount.toString(),
-      dstLpAcc: null,
-      lstMint: lstMint,
-      priorityFee: {
-        Auto: {
-          max_unit_price_micro_lamports: 5_000_000,
-          unit_limit: 200_000,
+    const res = await axios
+      .create({ baseURL: SANCTUM_URI })
+      .post("liquidity/add", {
+        amount: amount.toString(),
+        dstLpAcc: null,
+        lstMint: lstMint,
+        priorityFee: {
+          Auto: {
+            max_unit_price_micro_lamports: unitMicroLamports,
+            unit_limit: UNIT_LIMIT,
+          },
         },
-      },
-      quotedAmount: quotedAmount,
-      signer: signer,
-      srcLstAcc: null,
-    });
+        quotedAmount: quotedAmount,
+        signer: signer,
+        srcLstAcc: null,
+      });
     const rawTransaction = Buffer.from(res.data.tx, "base64");
 
     const versionedTransaction =
@@ -151,7 +160,7 @@ export const addLiquidity = async (
 
       transactionV0.message.recentBlockhash = blockhash;
       const sig = await solConnection.simulateTransaction(transactionV0);
-      console.log(sig)
+      console.log(sig);
       if (wallet.signTransaction) {
         const signedTx = await wallet.signTransaction(transactionV0);
         // const signature = await solConnection.sendTransaction(transactionV0);
@@ -164,13 +173,13 @@ export const addLiquidity = async (
           }
         );
         const tx = await solConnection.confirmTransaction(signature);
-        
-        if(tx) {
-            toast.success("Liquidity add is success");   
+
+        if (tx) {
+          toast.success("Liquidity add is success");
         }
       }
     } catch (error) {
-        console.log(error)
+      console.log(error);
       toast.error(error as string);
     }
   } catch (error) {
@@ -183,12 +192,14 @@ export const getRemoveLiquidityQuote = async (
   amount: number
 ): Promise<number | undefined> => {
   try {
-    const res = await axios.create({ baseURL: SANCTUM_URI }).get("liquidity/remove/quote", {
-      params: {
-        lstMint: lstMint,
-        amount: amount.toString(),
-      },
-    });
+    const res = await axios
+      .create({ baseURL: SANCTUM_URI })
+      .get("liquidity/remove/quote", {
+        params: {
+          lstMint: lstMint,
+          amount: amount.toString(),
+        },
+      });
     return res.data.lstAmount;
   } catch (error) {
     return undefined;
@@ -200,23 +211,26 @@ export const removeLiquidity = async (
   lstMint: string,
   signer: string | undefined,
   quotedAmount: number | undefined,
-  amount: number
+  amount: number,
+  unitMicroLamports: number
 ) => {
   try {
-    const res = await axios.create({ baseURL: SANCTUM_URI }).post("liquidity/remove", {
-      amount: amount.toString(),
-      dstLpAcc: null,
-      lstMint: lstMint,
-      priorityFee: {
-        Auto: {
-          max_unit_price_micro_lamports: 5_000_000,
-          unit_limit: 200_000,
+    const res = await axios
+      .create({ baseURL: SANCTUM_URI })
+      .post("liquidity/remove", {
+        amount: amount.toString(),
+        dstLpAcc: null,
+        lstMint: lstMint,
+        priorityFee: {
+          Auto: {
+            max_unit_price_micro_lamports: unitMicroLamports,
+            unit_limit: UNIT_LIMIT,
+          },
         },
-      },
-      quotedAmount: quotedAmount,
-      signer: signer,
-      srcLstAcc: null,
-    });
+        quotedAmount: quotedAmount,
+        signer: signer,
+        srcLstAcc: null,
+      });
     const rawTransaction = Buffer.from(res.data.tx, "base64");
 
     const versionedTransaction =
@@ -230,7 +244,7 @@ export const removeLiquidity = async (
 
       transactionV0.message.recentBlockhash = blockhash;
       const sig = await solConnection.simulateTransaction(transactionV0);
-      console.log(sig)
+      console.log(sig);
       if (wallet.signTransaction) {
         const signedTx = await wallet.signTransaction(transactionV0);
         // const signature = await solConnection.sendTransaction(transactionV0);
@@ -243,16 +257,20 @@ export const removeLiquidity = async (
           }
         );
         const tx = await solConnection.confirmTransaction(signature);
-        
-        if(tx) {
-            toast.success("Liquidity remove is success");   
+
+        if (tx) {
+          toast.success("Liquidity remove is success");
         }
       }
     } catch (error) {
-        console.log(error)
+      console.log(error);
       toast.error(error as string);
     }
   } catch (error) {
     console.log(error);
   }
 };
+function MessageCompiledTransaction(): import("@solana/web3.js").MessageCompiledInstruction {
+  throw new Error("Function not implemented.");
+}
+
